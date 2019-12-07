@@ -1,6 +1,10 @@
 library(readr)
 library(tidyr)
 library(ggplot2)
+library(DMwR2)
+library(rpart)
+library(rpart.plot)
+
 
 household <- read.table(file="household.csv", sep=";", header = TRUE, na.strings = c("" , " ","\t ", "Missing" ))
 
@@ -19,7 +23,20 @@ household$child_member_rate = household$children_under_5 / household$household_m
 household$bedroom_rate = household$bedroom_number / household$rooms_number
 
 
-ggplot(household, aes(x = wealth_index)) +
+# Drop unused columns 
+household <- household[ , -which(names(household) %in% c("case_id",  # unique ids
+                                                         "woman_member",  # woman_member_rate
+                                                         "children_under_5", # children_member_rate
+                                                         "bedroom_number"))]  # bedroom_rate
+
+for(colnm in colnames(household)) {
+  print(ggplot(household, aes_string(x = colnm)) +
+    geom_bar() + ylab("Number of Households"))
+}
+
+
+
+ggplot(household, aes_string(x = "wealth_index")) +
   geom_bar() + ggtitle("Wealth Distribution") +
   xlab("Wealth Index") + ylab("Number of Households")
 
@@ -28,15 +45,13 @@ ggplot(household, aes(x = refrigerator,
                  color = wealth_index)) + 
   geom_point()
 
+samp <- sample(1:nrow(household), 200)
+train <- household[samp, ]
 
-table(household$wealth_index, household$house_ownership)
-table(household$wealth_index, household$owns_another_house)
-table(household$wealth_index, household$car)
-table(household$wealth_index, household$refrigerator)
-table(household$wealth_index, household$heating)
-table(household$wealth_index, household$mobile_phone)
-table(household$wealth_index, household$motorcycle)
-
+model <- rpartXse(wealth_index ~ ., train, se = 1, verbose = T)
+prp(model, type = 0, extra = 101)
+predicted <- predict(model, household, type = "class")
+table(household$wealth_index, predicted)
 
 
 
