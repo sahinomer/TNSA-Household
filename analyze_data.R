@@ -2,10 +2,10 @@ library(readr)
 library(tidyr)
 library(ggplot2)
 library(DMwR2)
-library(rpart)
-library(rpart.plot)
 library(CORElearn) # feature extraction
-
+library(rpart) # decision tree
+library(rpart.plot)
+library(e1071) # svm
 
 household <- read.table(file="household.csv", sep=";", header = TRUE, na.strings = c("" , " ","\t ", "Missing" ))
 
@@ -40,9 +40,9 @@ household <- household_backup
 
 inf_gain <- attrEval(wealth_index ~ ., household, estimator = "InfGain")
 
-length(inf_gain[inf_gain>0.16])
+length(inf_gain[inf_gain>0.1])
 
-features <- names(inf_gain)[inf_gain>0.16]
+features <- names(inf_gain)[inf_gain>0.1]
 household <- household[,c("wealth_index", features)]
 
 
@@ -61,8 +61,13 @@ samp <- sample(1:nrow(household), nrow(household)*0.8)
 train <- household[samp, ]
 test <- household[-samp, ]
 
-model <- rpartXse(wealth_index ~ ., train, se = 1, verbose = T)
-prp(model, type = 0, extra = 101)
+# decision tree
+# model <- rpartXse(wealth_index ~ ., train, se = 1, verbose = T)
+# prp(model, type = 0, extra = 101)
+
+# svm
+model <- svm(wealth_index ~ ., train)
+
 predicted <- predict(model, test, type = "class")
 conf_matrix <- table(test$wealth_index, predicted)
 conf_matrix
