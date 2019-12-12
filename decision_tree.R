@@ -11,9 +11,8 @@ for (row in 1:nrow(parameter_set)) {
   prune_se  <- parameter_set[row, "prune_se"]
   
   features <- names(inf_gain)[inf_gain>inf_gain_th]
-  sub_train <- train[,c("wealth_index", features)]
   
-  model <- rpartXse(wealth_index ~ ., sub_train, se = prune_se)
+  model <- rpartXse(wealth_index ~ ., train[,c("wealth_index", features)], se = prune_se)
   predicted <- predict(model, validation, type = "class")
   conf_matrix <- table(predicted, validation$wealth_index)
   accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
@@ -30,9 +29,8 @@ inf_gain_th <- parameter_set[1, "inf_gain_th"]
 prune_se  <- parameter_set[1, "prune_se"]
 
 features <- names(inf_gain)[inf_gain>inf_gain_th]
-sub_train <- train[,c("wealth_index", features)]
 
-model <- rpartXse(wealth_index ~ ., sub_train, se = prune_se)
+model <- rpartXse(wealth_index ~ ., train[,c("wealth_index", features)], se = prune_se)
 
 # test
 predicted <- predict(model, test, type = "class")
