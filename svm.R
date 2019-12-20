@@ -1,5 +1,7 @@
-library(e1071) # svm
 library(performanceEstimation)
+library(e1071) # svm
+
+load(file = "household.data")
 
 perfEst <- performanceEstimation(
         PredTask(wealth_index ~ ., train),
@@ -19,9 +21,8 @@ work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 cost <- work_flow@pars[["learner.pars"]][["cost"]]
 gamma <- work_flow@pars[["learner.pars"]][["gamma"]]
 
-model <- svm(wealth_index ~ ., train, cost = cost, gamma = gamma)
-
 # Test
+model <- svm(wealth_index ~ ., train, cost = cost, gamma = gamma)
 predicted <- predict(model, test, type = "class")
 test_conf_matrix <- table(predicted, test$wealth_index)
 test_conf_matrix

@@ -1,40 +1,45 @@
+library(performanceEstimation)
+library(CORElearn) # feature extraction
+library(rpart) # decision tree
+library(rpart.plot)
 
+load(file = "household.data")
 
-parameter_set <- expand.grid(inf_gain_th = c(0.20, 0.25, 0.30, 0.40, 0.5), 
-                             prune_se = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0))
-
-
-inf_gain <- attrEval(wealth_index ~ ., train, estimator = "InfGain")
-
-for (row in 1:nrow(parameter_set)) {
-  inf_gain_th <- parameter_set[row, "inf_gain_th"]
-  prune_se  <- parameter_set[row, "prune_se"]
+decision_tree <- function(form, train, test, inf_gain, prune_se) {
   
-  features <- names(inf_gain)[inf_gain>inf_gain_th]
+  information_gain <- attrEval(form, train, estimator = "InfGain")
+  features <- names(information_gain)[information_gain>inf_gain]
   
-  model <- rpartXse(wealth_index ~ ., train[,c("wealth_index", features)], se = prune_se)
-  predicted <- predict(model, validation, type = "class")
-  conf_matrix <- table(predicted, validation$wealth_index)
-  accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+  model <- rpartXse(form, train[,c("wealth_index", features)], se = prune_se)
+  predictions <- predict(model, test, type = "class")
   
-  parameter_set$accuracy[row] = accuracy
+  list(trues = responseValues(form, test),
+       preds = predictions)
   
 }
 
 
+perfEst <- performanceEstimation(
+          PredTask(wealth_index ~ ., train),
+          workflowVariants(wf = "decision_tree", 
+                           inf_gain = c(0.20, 0.25, 0.30, 0.40, 0.5), 
+                           prune_se = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)),
+          EstimationTask(metrics = "acc",
+                         method = CV(nFolds = 10, seed = 1234)))
+
+plot(perfEst)
+
 # Best parameter set
-sorted_parameters = parameter_set[order(parameter_set$accuracy, decreasing = TRUE), ]
+topPerformers(perfEst, maxs = TRUE)
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 
-inf_gain_th <- parameter_set[1, "inf_gain_th"]
-prune_se  <- parameter_set[1, "prune_se"]
+inf_gain <- work_flow@pars[["learner.pars"]][["inf_gain"]]
+prune_se <- work_flow@pars[["learner.pars"]][["prune_se"]]
 
-features <- names(inf_gain)[inf_gain>inf_gain_th]
-
-model <- rpartXse(wealth_index ~ ., train[,c("wealth_index", features)], se = prune_se)
-
-# test
-predicted <- predict(model, test, type = "class")
-test_conf_matrix <- table(predicted, test$wealth_index)
+# Test
+true_pred = decision_tree(wealth_index ~ ., train, test, inf_gain, prune_se)
+true_pred <- as_tibble(true_pred)
+test_conf_matrix <- table(true_pred$preds, true_pred$trues)
 test_conf_matrix
 test_accuracy <- sum(diag(test_conf_matrix)) / sum(test_conf_matrix)
 test_accuracy
