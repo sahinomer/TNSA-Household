@@ -1,38 +1,27 @@
+library(e1071) # svm
+library(performanceEstimation)
+
+perfEst <- performanceEstimation(
+        PredTask(wealth_index ~ ., train),
+        workflowVariants(learner = "svm",
+                         learner.pars = list(cost = c(1, 5, 10),
+                                             gamma = c(0.01, 0.001))),
+        EstimationTask(metrics = "acc",
+                       method = CV(nFolds = 10, seed = 1234)))
 
 
-parameter_set <- expand.grid(scale = c(TRUE, FALSE), 
-                             type = c("C-classification", "eps-regression"))
-
-####
-# Error in svm.default(x, y, scale = scale, ..., na.action = na.action) : 
-# Need numeric dependent variable for regression.
-####
-
-
-for (row in 1:nrow(parameter_set)) {
-  
-  scale <- parameter_set[row, "scale"]
-  type <- parameter_set[row, "type"]
-  
-  model <- svm(wealth_index ~ ., train, scale = scale, type = type)
-  predicted <- predict(model, validation, type = "class")
-  conf_matrix <- table(predicted, validation$wealth_index)
-  accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
-  
-  parameter_set$accuracy[row] = accuracy
-  
-}
-
+plot(perfEst)
 
 # Best parameter set
-sorted_parameters = parameter_set[order(parameter_set$accuracy, decreasing = TRUE), ]
+topPerformers(perfEst, maxs = TRUE)
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 
-scale <- parameter_set[1, "scale"]
-type <- parameter_set[1, "type"]
+cost <- work_flow@pars[["learner.pars"]][["cost"]]
+gamma <- work_flow@pars[["learner.pars"]][["gamma"]]
 
-model <- svm(wealth_index ~ ., train, scale = scale, type = type)
+model <- svm(wealth_index ~ ., train, cost = cost, gamma = gamma)
 
-# test
+# Test
 predicted <- predict(model, test, type = "class")
 test_conf_matrix <- table(predicted, test$wealth_index)
 test_conf_matrix

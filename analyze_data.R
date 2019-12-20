@@ -6,6 +6,7 @@ library(CORElearn) # feature extraction
 library(rpart) # decision tree
 library(rpart.plot)
 library(e1071) # svm
+library(performanceEstimation)
 
 household <- read.table(file="household.csv", sep=";", header = TRUE, na.strings = c("" , " ","\t ", "Missing" ))
 
@@ -35,13 +36,13 @@ household <- household[ , -which(names(household) %in% c("woman_member",  # woma
 
 
 # Split train, validation and test set
-samples <- sample(1:nrow(household), nrow(household)*0.8)
+samples <- sample(1:nrow(household), nrow(household)*0.1)
 train <- household[samples, ]
-test_validation <- household[-samples, ]
+test <- household[-samples, ]
 
-samples <- sample(1:nrow(test_validation), nrow(test_validation)*0.5)
-validation <- test_validation[samples, ]
-test <- test_validation[-samples,]
+# samples <- sample(1:nrow(test_validation), nrow(test_validation)*0.5)
+# validation <- test_validation[samples, ]
+# test <- test_validation[-samples,]
 
 
 
