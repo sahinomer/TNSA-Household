@@ -1,50 +1,32 @@
 library(h2o)
 
-parameter_set <- expand.grid(var1 = c("default"))
+load(file = "household.data")
 
 h2oInstance <- h2o.init(ip = "localhost") # start H2O instance locally
 
+train_frame <- as.h2o(train, "train_frame")
+test_frame <- as.h2o(test, "test_frame")
 
 
-trnH <- as.h2o(train, "trnH")
-valH <- as.h2o(validation, "valH")
-tstH <- as.h2o(test, "tstH")
+model <- h2o.deeplearning(x=names(household[, -1]), 
+                          y=c("wealth_index"), 
+                          training_frame=train_frame,
+                          hidden = c(100, 200, 100),
+                          hidden_dropout_ratios = c(0.4, 0.4, 0.4),
+                          activation = "RectifierWithDropout",
+                          epochs = 500,
+                          shuffle_training_data=TRUE)
 
+predicted <- as.data.frame(h2o.predict(model, test_frame))
 
-for (row in 1:nrow(parameter_set)) {
-  
-  # scale <- parameter_set[row, "scale"]
-  
-  model <- h2o.deeplearning(x=1:ncol(train)-1, y=5, training_frame=trnH,
-                            hidden = c(100, 100, 100, 100), epochs = 500)
-  
-  predicted <- as.vector(h2o.predict(model, valH))
-  
-  conf_matrix <- table(predicted, validation$wealth_index)
-  accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
-  
-  parameter_set$accuracy[row] = accuracy
-  
-}
+predicted$predict <- factor(predicted$predict, 
+                            levels = c("Poorest", "Poorer", "Middle", "Richer", "Richest"))
 
+predicted$target <- test$wealth_index
 
-# Best parameter set
-sorted_parameters = parameter_set[order(parameter_set$accuracy, decreasing = TRUE), ]
-
-# scale <- parameter_set[1, "scale"]
-# type <- parameter_set[1, "type"]
-
-
-model <- h2o.deeplearning(x=1:ncol(train)-1, y=5, training_frame=trnH,
-                          hidden = c(100, 100, 100, 100), epochs = 500)
-
-
-# test
-predicted <- as.vector(h2o.predict(model, tstH))
-test_conf_matrix <- table(predicted, test$wealth_index)
-test_conf_matrix
-test_accuracy <- sum(diag(test_conf_matrix)) / sum(test_conf_matrix)
-test_accuracy
+conf_matrix <- table(predicted$predict, predicted$target)
+conf_matrix
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+accuracy
 
 h2o.shutdown(prompt = F)
-

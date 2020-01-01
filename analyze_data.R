@@ -9,6 +9,9 @@ library(DMwR2)
 household <- read.table(file="household.csv", sep=";", header = TRUE, na.strings = c("" , " ","\t ", "Missing" ))
 household <- household[, -1]  # drop case id
 
+# Drop other house ownership, only one instance
+household <- household[-which(household$house_ownership == "Other"), ]
+
 # Unknown values
 sum(!complete.cases(household))
 household <- na.omit(household)
@@ -52,11 +55,11 @@ for(colnm in colnames(household)) {
 
 # Split train, validation and test set
 set.seed(1024)
-samples <- sample(1:nrow(household), nrow(household)*0.2)
+samples <- sample(1:nrow(household), nrow(household)*0.8)
 train <- household[samples, ]
 test <- household[-samples, ]
 
-save(list=c("train", "test"), file = "household.data")
+save(list=c("household", "train", "test"), file = "household.data")
 rm(list = ls())
 
 ###########################################################################
