@@ -9,7 +9,7 @@ perfEst <- performanceEstimation(
                          learner.pars = list(cost = c(1, 5, 10),
                                              gamma = c(0.01, 0.001))),
         EstimationTask(metrics = "acc",
-                       method = CV(nFolds = 10, seed = 1234)))
+                       method = CV(nFolds = 5, seed = 1234)))
 
 
 plot(perfEst)

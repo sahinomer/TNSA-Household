@@ -25,7 +25,7 @@ perfEst <- performanceEstimation(
                            inf_gain = c(0.20, 0.25, 0.30, 0.40, 0.5), 
                            prune_se = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)),
           EstimationTask(metrics = "acc",
-                         method = CV(nFolds = 10, seed = 1234)))
+                         method = CV(nFolds = 5, seed = 1234)))
 
 plot(perfEst)
 
