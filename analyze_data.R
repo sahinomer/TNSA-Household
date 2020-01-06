@@ -1,7 +1,6 @@
 library(readr)
 library(tidyr)
 library(ggplot2)
-library(DMwR2)
 
 ###########################################################################
 
@@ -18,7 +17,7 @@ household <- na.omit(household)
 
 ###########################################################################
 
-# Seperate and factirize region
+# Seperate and factorize region
 household <- separate(household, region_combined, c("cardinal_direction", "region", "settlement"), sep = '-')
 household$cardinal_direction <- as.factor(household$cardinal_direction)
 household$region <- as.factor(household$region)

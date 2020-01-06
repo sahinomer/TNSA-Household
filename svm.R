@@ -13,6 +13,7 @@ perfEst <- performanceEstimation(
 
 
 plot(perfEst)
+save(list=c("perfEst"), file = "svm.perf")
 
 # Best parameter set
 topPerformers(perfEst, maxs = TRUE)

@@ -1,6 +1,7 @@
 library(performanceEstimation)
 library(CORElearn) # feature extraction
-library(rpart) # decision tree
+library(DMwR2) # decision tree
+library(rpart)
 library(rpart.plot)
 
 load(file = "household.data")
@@ -18,7 +19,6 @@ decision_tree <- function(form, train, test, inf_gain, prune_se) {
   
 }
 
-
 perfEst <- performanceEstimation(
           PredTask(wealth_index ~ ., train),
           workflowVariants(wf = "decision_tree", 
@@ -28,6 +28,7 @@ perfEst <- performanceEstimation(
                          method = CV(nFolds = 5, seed = 1234)))
 
 plot(perfEst)
+save(list=c("perfEst"), file = "decision_tree.perf")
 
 # Best parameter set
 topPerformers(perfEst, maxs = TRUE)

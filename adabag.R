@@ -1,4 +1,5 @@
 library(performanceEstimation)
+library(CORElearn) # feature extraction
 library(adabag)
 
 load(file = "household.data")
@@ -25,7 +26,10 @@ mfinal <- work_flow@pars[["learner.pars"]][["mfinal"]]
 control <- work_flow@pars[["learner.pars"]][["control"]]
 
 # Test
-model <- bagging(wealth_index ~ ., train, mfinal = mfinal,
+information_gain <- attrEval(wealth_index ~ ., train, estimator = "InfGain")
+features <- names(information_gain)[information_gain>0.2]
+
+model <- bagging(wealth_index ~ ., train[,c("wealth_index", features)], mfinal = mfinal,
                  control = control)
 
 predicted <- predict(model, test, type = "class")

@@ -1,0 +1,117 @@
+---
+title: "TNSA Houselhold Wealth Index"
+author: "Ömer Şahin"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Introduction
+
+2013 Turkey Demographic and Health Survey (TDHS-2013), fertility levels and trends, infant and child mortality, family planning and maternal and child health issues a sample survey at the national level designed to provide information on. And also, gives information about the wealth index of the household. In this work, the wealth index analysis and prediction according to other information about a household are evaluated.
+
+# Data Analyze
+
+#### Libraries
+
+Required libraries for data preparation and analyze:
+```{r}
+library(readr)
+library(tidyr)
+library(ggplot2)
+```
+
+## Data Preperation
+
+#### Load Household Dataset
+
+Simplified household data of the TNSA dataset is loaded.
+```{r}
+household <- read.table(file="household.csv", sep=";", header = TRUE, na.strings = c("" , " ","\t ", "Missing" ))
+
+```
+
+Each household row has "case_id" field. These values are unique for each sample. The ID column is dropped due to has no contribution to the training.
+```{r}
+household <- household[, -1]  # drop case id
+```
+
+In house ownership column has only one "Other" feature. Therefore, this row is evaluated as outliers and dropped.
+```{r}
+household <- household[-which(household$house_ownership == "Other"), ]
+```
+
+In this stage, the number of samples:
+```{r}
+nrow(household)
+```
+
+The dataset has some rows with unknowns attributes. The number of rows with missing values is:
+```{r}
+sum(!complete.cases(household))
+```
+
+The number of rows that are not complete can be ignored compared to the total number of samples, and these samples are dropped.
+```{r}
+household <- na.omit(household)
+```
+
+At the end of the data clearing, the number of samples:
+```{r}
+nrow(household)
+```
+
+#### Combined Region
+
+The household data contain the combined region field that consists of combination of a cardinal direction, region, and settlement. These fields are separated into three.
+```{r}
+head(household$region_combined)
+
+household <- separate(household, region_combined, c("cardinal_direction", "region", "settlement"), sep = '-')
+household$cardinal_direction <- as.factor(household$cardinal_direction)
+household$region <- as.factor(household$region)
+household$settlement <- as.factor(household$settlement)
+
+head(household[, 2:4])
+```
+
+
+#### Wealth Index
+
+The aim of this project is predicting the wealth index of the household. There is an order between wealth index values. Therefore, wealth index factor is releveled. 
+```{r}
+# Refactor levels of wealth index
+household$wealth_index <- factor(household$wealth_index, 
+                                 levels = c("Poorest", "Poorer", "Middle", "Richer", "Richest"))
+levels(household$wealth_index)
+```
+
+
+#### Attribute Relation
+
+Some attributes have a relation to each other. These relations can be represented as a ratio between them. In this way, all household samples will have attributes that in the same range even they are in the natural number range. After extending columns with the rate of related ones, duplicate columns are dropped. 
+
+```{r}
+# Rate of related attributes
+household$man_member_rate = (household$household_member - household$woman_member) / household$household_member
+household$woman_member_rate = household$woman_member / household$household_member
+household$child_member_rate = household$children_under_5 / household$household_member
+household$bedroom_rate = household$bedroom_number / household$rooms_number
+
+# Drop duplicated columns with rate values
+household <- household[ , -which(names(household) %in% c("woman_member",  # woman_member_rate
+                                                         "children_under_5", # children_member_rate
+                                                         "bedroom_number"))]  # bedroom_rate
+```
+
+#### Data Distribution
+
+```{r}
+# Plot distribution of data
+for(colnm in colnames(household)) {
+  print(ggplot(household, aes_string(x = colnm)) +
+          geom_bar() + ylab("Number of Households"))
+}
+
+```
+
