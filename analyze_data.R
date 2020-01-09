@@ -1,5 +1,6 @@
 library(readr)
 library(tidyr)
+library(dplyr)
 library(ggplot2)
 
 ###########################################################################
@@ -42,13 +43,41 @@ household <- household[ , -which(names(household) %in% c("woman_member",  # woma
 
 summary(household)
 
+# Imbalanced attributes
+household <- household[ , -which(names(household) %in% c("refrigerator", "garbage_grinder",
+                                                         "washing_machine", "washer_dryer", 
+                                                         "home_theather", "mobile_phone",
+                                                         "taxi_minibus", "tractor", "motorcycle"))]
+
+
 ###########################################################################
 
 # Plot distribution of data
-for(colnm in colnames(household)) {
-  print(ggplot(household, aes_string(x = colnm)) +
-          geom_bar() + ylab("Number of Households"))
-}
+# for(colnm in colnames(household)) {
+#   print(ggplot(household, aes_string(x = colnm)) +
+#           geom_bar() + ylab("Number of Households"))
+# }
+# 
+# 
+# for(colmn in colnames(household)) {
+#   tbl <- table(household$wealth_index, household[,colmn])
+#   tbl <- tbl / rowSums(tbl)
+#   conf_matrix <- as.data.frame(tbl)
+#   print(
+#     ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
+#       xlab("wealth_index") + ylab(colmn) + 
+#       geom_tile(aes(fill = Freq)) +
+#       geom_text(aes(label = sprintf("%0.4f", Freq)), vjust = 1) +
+#       scale_fill_gradient(low = "blue",
+#                           high = "red",
+#                           trans = "log")
+#   )
+# }
+# summary(household[, 16:41])
+# 
+# summary(household[, c("refrigerator", "garbage_grinder", "washing_machine", "washer_dryer", 
+#                       "home_theather", "mobile_phone", "taxi_minibus", "tractor", "motorcycle")])
+
 
 ###########################################################################
 

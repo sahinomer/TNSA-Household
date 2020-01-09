@@ -4,6 +4,7 @@ author: "Ömer Şahin"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 # Introduction
@@ -106,12 +107,54 @@ household <- household[ , -which(names(household) %in% c("woman_member",  # woma
 
 #### Data Distribution
 
+The wealth index of a household is the target that is tried to predict. The distribution of the wealth index is nearly balanced. It helps to ensure the model does not tend to a class when the target class is balanced. 
+
+```{r}
+ggplot(household, aes(x = wealth_index)) + geom_bar() + 
+        xlab("Wealth Index") + ylab("Number of Households") + 
+        ggtitle(label = "Wealth Index Distribution")
+      
+```
+
+
+Distributions of the some of binary attributes about households are too imbalanced. There are not enough counter samples for these attributes. Therefore, these attributes can misguide the model when predicting the wealth index. Imbalanced attributes: 
+
+```{r}
+summary(household[, c("refrigerator", "garbage_grinder", "washing_machine", "washer_dryer", 
+                      "home_theather", "mobile_phone", "taxi_minibus", "tractor", "motorcycle")])
+```
+
+According to results, nearly all households have the refrigerator, washing machine, and mobile phone. On the other hand, nearly none of the households have the garbage grinder, washer dryer or home theatre. As a result, these attributes are not used for training the model.
+
+```{r}
+household <- household[ , -which(names(household) %in% c("refrigerator", "garbage_grinder",
+                                                         "washing_machine", "washer_dryer", 
+                                                         "home_theather", "mobile_phone",
+                                                         "taxi_minibus", "tractor", "motorcycle"))]
+```
+
+
+
 ```{r}
 # Plot distribution of data
-for(colnm in colnames(household)) {
-  print(ggplot(household, aes_string(x = colnm)) +
-          geom_bar() + ylab("Number of Households"))
-}
+# for(colnm in colnames(household)) {
+#   print(ggplot(household, aes_string(x = colnm)) +
+#           geom_bar() + ylab("Number of Households"))
+# }
 
+# for(colmn in colnames(household)) {
+#   tbl <- table(household$wealth_index, household[,colmn])
+#   tbl <- tbl / rowSums(tbl)
+#   conf_matrix <- as.data.frame(tbl)
+#   print(
+#     ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
+#       xlab("wealth_index") + ylab(colmn) + 
+#       geom_tile(aes(fill = Freq)) +
+#       geom_text(aes(label = sprintf("%0.4f", Freq)), vjust = 1) +
+#       scale_fill_gradient(low = "blue",
+#                           high = "red",
+#                           trans = "log")
+#   )
+# }
 ```
 
