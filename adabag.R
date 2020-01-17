@@ -1,15 +1,27 @@
 library(performanceEstimation)
-library(CORElearn) # feature extraction
 library(adabag)
 
 load(file = "household.data")
 
+
+ada_bagging <- function(form, train, test, mfinal, control) {
+  
+  model <- bagging(wealth_index ~ ., train, mfinal = mfinal, control = control)
+  
+  predicted <- predict(model, test, type = "class")
+  
+  list(trues = responseValues(form, test),
+       preds = predicted$class)
+  
+}
+
+
 perfEst <- performanceEstimation(
   PredTask(wealth_index ~ ., train),
-  workflowVariants(learner = "bagging",
-                   learner.pars = list(mfinal = c(5, 10, 20),
-                                       control = c(rpart.control(maxdepth=5))
-                                       )),
+  workflowVariants(wf = "ada_bagging",
+                   mfinal = c(5, 10, 20, 40, 80),
+                   control = c(rpart.control(maxdepth=5), rpart.control(maxdepth=10))
+                  ),
   EstimationTask(metrics = "acc",
                  method = CV(nFolds = 5, seed = 1234))
 )
@@ -22,12 +34,11 @@ save(list=c("perfEst"), file = "adabag.perf")
 topPerformers(perfEst, maxs = TRUE)
 work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 
-mfinal <- work_flow@pars[["learner.pars"]][["mfinal"]]
-control <- work_flow@pars[["learner.pars"]][["control"]]
+mfinal <- work_flow@pars[["mfinal"]]
+control <- work_flow@pars[["control"]]
 
 # Test
-model <- bagging(wealth_index ~ ., train, mfinal = mfinal,
-                 control = control)
+model <- bagging(wealth_index ~ ., train, mfinal = mfinal, control = control)
 
 predicted <- predict(model, test, type = "class")
 
