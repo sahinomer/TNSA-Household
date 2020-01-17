@@ -11,7 +11,7 @@ test_frame <- as.h2o(test, "test_frame")
 model <- h2o.deeplearning(x=names(household[, -1]), 
                           y=c("wealth_index"), 
                           training_frame=train_frame,
-                          hidden = c(100, 200, 100),
+                          hidden = c(196, 256, 128),
                           hidden_dropout_ratios = c(0.4, 0.4, 0.4),
                           activation = "RectifierWithDropout",
                           epochs = 500,
