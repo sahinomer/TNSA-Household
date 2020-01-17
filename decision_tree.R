@@ -22,13 +22,13 @@ decision_tree <- function(form, train, test, inf_gain, prune_se) {
 perfEst <- performanceEstimation(
           PredTask(wealth_index ~ ., train),
           workflowVariants(wf = "decision_tree", 
-                           inf_gain = c(0.20, 0.25, 0.30, 0.40, 0.5), 
+                           inf_gain = c(0.20, 0.30, 0.40, 0.50), 
                            prune_se = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)),
           EstimationTask(metrics = "acc",
                          method = CV(nFolds = 5, seed = 1234)))
 
 plot(perfEst)
-save(list=c("perfEst"), file = "decision_tree.perf")
+save(list=c("perfEst"), file = "decisiontree.perf")
 
 # Best parameter set
 topPerformers(perfEst, maxs = TRUE)
