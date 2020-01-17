@@ -6,8 +6,7 @@ load(file = "household.data")
 perfEst <- performanceEstimation(
   PredTask(wealth_index ~ ., train),
   workflowVariants(learner = "randomForest",
-                   learner.pars = list(ntree = c(100, 200, 300, 400, 500),
-                                       )),
+                   learner.pars = list(ntree = c(100, 200, 300, 400, 500))),
   EstimationTask(metrics = "acc",
                  method = CV(nFolds = 5, seed = 1234))
 )
