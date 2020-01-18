@@ -17,12 +17,12 @@ output:
 
 Required libraries for data preparation and analyze:
 ```{r}
-library(readr)
-library(tidyr)
-library(ggplot2)
+library(readr)    # Data loading 
+library(tidyr)    # Seperate data column
+library(ggplot2)  # Visualize
 ```
 
-## Data Preperation
+### Preparation
 
 #### Load Household Dataset
 
@@ -107,7 +107,7 @@ household <- household[ , -which(names(household) %in% c("woman_member",  # woma
 
 #### Data Distribution
 
-The wealth index of a household is the target that is tried to predict. The distribution of the wealth index is nearly balanced. It helps to ensure the model does not tend to a class when the target class is balanced. 
+The wealth index of a household is the target that is tried to predict. The distribution of the wealth index is quite balanced. It helps to ensure the model does not tend to a class when the target class is balanced. 
 
 ```{r}
 ggplot(household, aes(x = wealth_index)) + geom_bar() + 
@@ -133,9 +133,21 @@ household <- household[ , -which(names(household) %in% c("refrigerator", "garbag
                                                          "taxi_minibus", "tractor", "motorcycle"))]
 ```
 
-
+Province column in dataset is also imbalanced and has too many different classes due to there are 81 cities in Turkey. Besides, the Random Forest model cannot handle too many categories. Therefore, the province column is dropped to evaluate other models in equal conditions.
 
 ```{r}
+summary(household$province)
+household <- household[, -which(names(household) == "province")]
+```
+
+#### Outliers
+
+TNSA Household dataset was collected under controlled by qualified observers. Therefore, Obtained information about households is accepted as truth. Information that does not have enough observations or balanced distribution is not used in the analysis to make a proper evaluation.
+
+## Analyze
+
+
+```{r eval=FALSE, include=FALSE}
 # Plot distribution of data
 # for(colnm in colnames(household)) {
 #   print(ggplot(household, aes_string(x = colnm)) +
@@ -157,4 +169,8 @@ household <- household[ , -which(names(household) %in% c("refrigerator", "garbag
 #   )
 # }
 ```
+
+
+# Classification
+
 

@@ -43,15 +43,14 @@ household <- household[ , -which(names(household) %in% c("woman_member",  # woma
 
 summary(household)
 
-# Too many attributes
-household <- household[, -which(names(household) == "province")]
-
 # Imbalanced attributes
 household <- household[ , -which(names(household) %in% c("refrigerator", "garbage_grinder",
                                                          "washing_machine", "washer_dryer", 
                                                          "home_theather", "mobile_phone",
                                                          "taxi_minibus", "tractor", "motorcycle"))]
 
+# Too many attributes
+household <- household[, -which(names(household) == "province")]
 
 ###########################################################################
 

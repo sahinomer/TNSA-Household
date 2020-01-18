@@ -22,7 +22,7 @@ decision_tree <- function(form, train, test, inf_gain, prune_se) {
 perfEst <- performanceEstimation(
           PredTask(wealth_index ~ ., train),
           workflowVariants(wf = "decision_tree", 
-                           inf_gain = c(0.1, 0.2, 0.3), 
+                           inf_gain = c(0.0, 0.1, 0.2), 
                            prune_se = c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)),
           EstimationTask(metrics = "acc",
                          method = CV(nFolds = 5, seed = 1234)))
