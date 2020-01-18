@@ -83,7 +83,7 @@ household <- household[, -which(names(household) == "province")]
 
 ###########################################################################
 
-# Split train, validation and test set
+# Split train and test set
 set.seed(1024)
 samples <- sample(1:nrow(household), nrow(household)*0.8)
 train <- household[samples, ]

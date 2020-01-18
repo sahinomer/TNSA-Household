@@ -173,4 +173,208 @@ TNSA Household dataset was collected under controlled by qualified observers. Th
 
 # Classification
 
+Each sample row contains 34 features about household and wealth index. The wealth index of the household is the target value that is tried to predict by the classifier. Different types of classifiers are compared with others and itself that uses a different parameter set.
+
+#### Libraries
+
+Required libraries for data preparation and analyze:
+```{r message=FALSE, warning=FALSE}
+library(performanceEstimation)   # Performance estimation
+
+library(CORElearn)     # Feature extraction
+library(DMwR2)         # Decision tree
+library(rpart)         # Decision tree
+library(rpart.plot)    # Decision tree Visualize
+library(e1071)         # Support vector machine
+library(randomForest)  # Random forest
+library(adabag)        # Adabag
+library(h2o)           # Neural network
+```
+
+#### Split Train/Test Set
+
+Randomly selected 20 percent of the dataset is used as a test and the rest of them are used for training models. 
+
+```{r}
+set.seed(1024)
+samples <- sample(1:nrow(household), nrow(household)*0.8)
+train <- household[samples, ]
+test <- household[-samples, ]
+```
+
+#### Initialize Result Vector
+
+Initialize results vector to compare different models according to their best.
+
+```{r}
+results <- c(0, 0, 0, 0, 0)
+names(results) <- c("Decision Tree", "Support Vector Machine", 
+                              "Random Forest", "Adabag", "Neural Network")
+
+```
+
+
+### Decision Tree
+
+The first tried model is the decision tree. Optimum parameters are selected by using a performance estimator. The model is trained with this parameter set and the test set is predicted by the model.
+Parameters are information gain threshold and prune value. Features are sorted by their information gain and thresholded by a value to reduce the number of features. Features are kept if their information gain value greater than the threshold. Decision tree pruning is evaluated by given parameters.
+
+Paramter set:
+```{r}
+inf_gain <- c(0.0, 0.1, 0.2)
+prune_se <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+```
+
+
+```{r cache=TRUE}
+load("decisiontree.perf")  # Load pre-estimated performances
+plot(perfEst)   # Plot performance estimation results
+
+# Best parameter set
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
+
+inf_gain <- work_flow@pars[["inf_gain"]]
+prune_se <- work_flow@pars[["prune_se"]]
+
+cat("Best Paramter set:",
+    "\n  inf_gain : ", inf_gain,
+    "\n  prune_se : ", prune_se)
+
+# Train model with best parameter set for testing
+information_gain <- attrEval(wealth_index ~ ., train, estimator = "InfGain")
+features <- names(information_gain)[information_gain>inf_gain]
+
+model <- rpartXse(wealth_index ~ ., train[,c("wealth_index", features)], se = prune_se)
+predicted <- predict(model, test, type = "class")
+
+conf_matrix <- table(predicted, test$wealth_index)
+conf_matrix
+results["Decision Tree"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+results["Decision Tree"]
+
+```
+
+
+
+### Support Vector Machine
+SVM---
+
+Paramter set:
+```{r}
+cost <- c(1, 5, 10)
+gamma <- c(0.01, 0.001)
+```
+
+```{r cache=TRUE}
+load("svm.perf")  # Load pre-estimated performances
+plot(perfEst)   # Plot performance estimation results
+
+# Best parameter set
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
+
+cost <- work_flow@pars[["learner.pars"]][["cost"]]
+gamma <- work_flow@pars[["learner.pars"]][["gamma"]]
+
+cat("Best Paramter set:",
+    "\n  cost  : ", cost,
+    "\n  gamma : ", gamma)
+
+# Train model with best parameter set for testing
+model <- svm(wealth_index ~ ., train, cost = cost, gamma = gamma)
+predicted <- predict(model, test, type = "class")
+
+conf_matrix <- table(predicted, test$wealth_index)
+conf_matrix
+results["Support Vector Machine"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+results["Support Vector Machine"]
+```
+
+
+
+### Random Forest
+-- random forest
+
+Paramter set:
+```{r}
+cost <- c(1, 5, 10)
+gamma <- c(0.01, 0.001)
+```
+
+```{r cache=TRUE}
+load("randomforest.perf")  # Load pre-estimated performances
+plot(perfEst) 
+
+# Best parameter set
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
+
+ntree <- work_flow@pars[["learner.pars"]][["ntree"]]
+
+cat("Best Paramter set:",
+    "\n  ntree  : ", ntree)
+
+# Train model with best parameter set for testing
+model <- randomForest(wealth_index ~ ., train, ntree = ntree)
+
+predicted <- predict(model, test, type = "class")
+
+conf_matrix <- table(predicted, test$wealth_index)
+conf_matrix
+results["Random Forest"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+results["Random Forest"]
+```
+
+
+
+### Adabag
+--- adabagg
+
+Paramter set:
+```{r}
+cost <- c(1, 5, 10)
+gamma <- c(0.01, 0.001)
+```
+
+```{r cache=TRUE}
+load("adabag.perf")  # Load pre-estimated performances
+plot(perfEst) 
+
+# Best parameter set
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
+
+mfinal <- work_flow@pars[["mfinal"]]
+control <- work_flow@pars[["control"]]
+
+cat("Best Paramter set:",
+    "\n  mfinal  : ", mfinal,
+    "\n  control : ", control$maxdepth)
+
+# Train model with best parameter set for testing
+model <- bagging(wealth_index ~ ., train, mfinal = mfinal, control = control)
+
+predicted <- predict(model, test, type = "class")
+
+predicted$confusion
+results["Adabag"] <- sum(diag(predicted$confusion)) / sum(predicted$confusion)
+results["Adabag"]
+```
+
+
+### Results
+
+```{r}
+df = data.frame(Model = names(results), 
+                Accuracy = results)
+ggplot(df, aes(x = Model, weight=Accuracy)) + geom_bar() + 
+        xlab("Model") + ylab("Accuracy") + 
+        ggtitle(label = "Model Accuracies")
+```
+
+
+
+
+
+
+
+
+
 
