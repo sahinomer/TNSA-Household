@@ -420,11 +420,16 @@ According to results, Adabag achieved the worst score, decision tree, and random
 
 The normalized confusion matrix of the neural network that is the best model is given at the following plot:
 
-```{r}
-library(caret)
-cm <- confusionMatrix(predicted$predict, predicted$target)
-cm$Accuracy
+```{r warning=FALSE}
+normalized_conf_matrix <- conf_matrix$table / colSums(conf_matrix$table)
+normalized_conf_matrix <- as.data.frame(normalized_conf_matrix)
 
+ggplot(data =  normalized_conf_matrix, mapping = aes(x = Reference, y = Prediction)) +
+       xlab("Reference") + ylab("Prediction") + 
+       geom_tile(aes(fill = Freq)) +
+       geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
+       scale_fill_gradient(low = "white",
+                           high = "blue")
 ```
 
 
