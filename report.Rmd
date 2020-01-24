@@ -359,14 +359,58 @@ results["Adabag"]
 ```
 
 
+### Neural Network
+--- nn
+
+```{r eval=FALSE, include=FALSE}
+h2oInstance <- h2o.init(ip = "localhost") # start H2O instance locally
+```
+
+```{r cache=TRUE, results="hide"}
+train_frame <- as.h2o(train, "train_frame")
+test_frame <- as.h2o(test, "test_frame")
+
+model <- h2o.deeplearning(x=names(household[, -1]), 
+                          y=c("wealth_index"), 
+                          training_frame=train_frame,
+                          hidden = c(196, 256, 128),
+                          hidden_dropout_ratios = c(0.4, 0.4, 0.4),
+                          activation = "RectifierWithDropout",
+                          epochs = 500,
+                          shuffle_training_data=TRUE)
+
+predicted <- as.data.frame(h2o.predict(model, test_frame))
+
+```
+
+
+```{r}
+predicted$predict <- factor(predicted$predict, 
+                            levels = c("Poorest", "Poorer", "Middle", "Richer", "Richest"))
+
+predicted$target <- test$wealth_index
+
+conf_matrix <- table(predicted$predict, predicted$target)
+conf_matrix
+results["Neural Network"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+results["Neural Network"]
+```
+
+```{r eval=FALSE, include=FALSE}
+h2o.shutdown(prompt = F)
+```
+
+
 ### Results
 
 ```{r}
 df = data.frame(Model = names(results), 
-                Accuracy = results)
+                Accuracy = results*100)
 ggplot(df, aes(x = Model, weight=Accuracy)) + geom_bar() + 
         xlab("Model") + ylab("Accuracy") + 
-        ggtitle(label = "Model Accuracies")
+        ggtitle(label = "Model Accuracies") + 
+        geom_text(aes(label = sprintf("%0.4f", round(Accuracy, digits = 4)), 
+                      y = Accuracy-5), size = 3)
 ```
 
 
