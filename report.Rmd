@@ -1,5 +1,5 @@
 ---
-title: "TNSA Houselhold Wealth Index"
+title: "TNSA Household Wealth Index"
 author: "Ömer Şahin"
 output:
   html_document:
@@ -45,7 +45,7 @@ In this stage, the number of samples:
 nrow(household)
 ```
 
-The dataset has some rows with unknowns attributes. The number of rows with missing values is:
+The dataset has some rows with unknown attributes. The number of rows with missing values is:
 ```{r}
 sum(!complete.cases(household))
 ```
@@ -62,7 +62,7 @@ nrow(household)
 
 #### Combined Region
 
-The household data contain the combined region field that consists of combination of a cardinal direction, region, and settlement. These fields are separated into three.
+The household data contain the combined region field that consists of a combination of a cardinal direction, region, and settlement. These fields are separated into three.
 ```{r}
 head(household$region_combined)
 
@@ -122,7 +122,7 @@ summary(household[, c("refrigerator", "garbage_grinder", "washing_machine", "was
                       "home_theather", "mobile_phone", "taxi_minibus", "tractor", "motorcycle")])
 ```
 
-According to results, nearly all households have the refrigerator, washing machine, and mobile phone. On the other hand, nearly none of the households have the garbage grinder, washer dryer or home theatre. As a result, these attributes are not used for training the model.
+According to results, nearly all households have a refrigerator, washing machine, and a mobile phone. On the other hand, nearly none of the households have the garbage grinder, washer dryer or home theatre. As a result, these attributes are not used for training the model.
 
 ```{r}
 household <- household[ , -which(names(household) %in% c("refrigerator", "garbage_grinder",
@@ -131,7 +131,7 @@ household <- household[ , -which(names(household) %in% c("refrigerator", "garbag
                                                          "taxi_minibus", "tractor", "motorcycle"))]
 ```
 
-Province column in dataset is also imbalanced and has too many different classes due to there are 81 cities in Turkey. Besides, the Random Forest model cannot handle too many categories. Therefore, the province column is dropped to evaluate other models in equal conditions.
+Province column in the dataset is also imbalanced and has too many different classes due to there are 81 cities in Turkey. Besides, the Random Forest model cannot handle too many categories. Therefore, the province column is dropped to evaluate other models in equal conditions.
 
 ```{r}
 summary(household$province)
@@ -258,7 +258,7 @@ results["Decision Tree"]
 
 
 ### Support Vector Machine
-SVM crates decision boundry between classes. Cost and gamma parameters are evaluated by performance estimation. The test model is trained with the optimum paramater set for the classification.
+SVM creates a decision boundary between classes. Cost and gamma parameters are evaluated by performance estimation. The test model is trained with the optimum parameter set for the classification.
 
 Parameter set:
 ```{r}
@@ -293,7 +293,7 @@ results["Support Vector Machine"]
 
 
 ### Adabag
-Bootstrap Aggregation (Bagging) is an ensemble method. The number of iterations for boosting run and maxdepth is evaluated by using performance estimator.
+Bootstrap Aggregation (Bagging) is an ensemble method. The number of iterations for boosting run and max depth is evaluated by using the performance estimator.
 
 Parameter set:
 ```{r}
@@ -327,7 +327,7 @@ results["Adabag"]
 ```
 
 ### Random Forest
-Random Forest is combination of the multiple decision trees to prevent overfitting that comes with decision trees. The number of trees is evaluated by using performance estimator.
+Random Forest is a combination of the multiple decision trees to prevent overfitting that comes with decision trees. The number of trees is evaluated by using the performance estimator.
 
 Parameter set:
 ```{r}
@@ -416,7 +416,7 @@ ggplot(df, aes(x = Model, weight=Accuracy)) + geom_bar() +
 ```
 
 
-According to results, Adabag achieved the worst score, decision tree, and random forest got more success than bagging. SVM and neural network models achieved a similar score on classification TNSA household data for the wealth index. The neural network model is the best model in evaluated ones. In addition, misclassification is done mostly in favor of the close class such as richer to richest.
+According to results, Adabag achieved the worst score, decision tree, and random forest got more success than bagging. SVM and neural network models achieved a similar score on classification TNSA household data for the wealth index. The neural network model is the best in evaluated ones. Besides, misclassification is done mostly in favor of the close class such as richer to richest.
 
 The normalized confusion matrix of the neural network that is the best model is given at the following plot:
 
@@ -433,7 +433,7 @@ ggplot(data =  normalized_conf_matrix, mapping = aes(x = Reference, y = Predicti
 ```
 
 
-
+According to the confusion matrix, the neural network model is more successful in predicting the extreme classes than the predicting to wealth indexes in the middle.
 
 
 
