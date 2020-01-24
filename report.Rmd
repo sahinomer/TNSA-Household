@@ -38,6 +38,7 @@ household <- household[, -1]  # drop case id
 In house ownership column has only one "Other" feature. Therefore, this row is evaluated as outliers and dropped.
 ```{r}
 household <- household[-which(household$house_ownership == "Other"), ]
+household$house_ownership <- factor(household$house_ownership)
 ```
 
 In this stage, the number of samples:
@@ -144,6 +145,51 @@ TNSA Household dataset was collected under controlled by qualified observers. Th
 
 ## Analyze
 
+At the end of data preparation, some data analyzing by visualizing is done.
+
+
+The relation between house ownership and wealth index:
+```{r echo=FALSE}
+tbl <- table(household$wealth_index, household$house_ownership)
+tbl <- tbl / rowSums(tbl)
+conf_matrix <- as.data.frame(tbl)
+ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
+   xlab("Wealth Index") + ylab("House Ownership") + 
+   geom_tile(aes(fill = Freq)) +
+   geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
+   scale_fill_gradient(low = "white",
+                       high = "blue")
+
+```
+
+The relation between car ownership and wealth index:
+```{r echo=FALSE}
+tbl <- table(household$wealth_index, household$car)
+tbl <- tbl / rowSums(tbl)
+conf_matrix <- as.data.frame(tbl)
+ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
+   xlab("Wealth Index") + ylab("Car Ownership") + 
+   geom_tile(aes(fill = Freq)) +
+   geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
+   scale_fill_gradient(low = "white",
+                       high = "blue")
+
+```
+
+The relation between internet connection and wealth index:
+```{r echo=FALSE}
+tbl <- table(household$wealth_index, household$internet)
+tbl <- tbl / rowSums(tbl)
+conf_matrix <- as.data.frame(tbl)
+ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
+   xlab("Wealth Index") + ylab("Internet Connection") + 
+   geom_tile(aes(fill = Freq)) +
+   geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
+   scale_fill_gradient(low = "white",
+                       high = "blue")
+
+```
+
 
 
 
@@ -203,17 +249,29 @@ train <- household[samples, ]
 test <- household[-samples, ]
 ```
 
-#### Initialize Result Vector
-
-Initialize results vector to compare different models according to their best.
+### Analyze Decision Boundary
 
 ```{r}
+decision_tree <- rpartXse(wealth_index ~ ., train[,c("wealth_index", "internet")], se = 1)
+
+predicted <- predict(decision_tree, test, type = "class")
+
+conf_matrix <- confusionMatrix(predicted, test$wealth_index)
+conf_matrix$table
+conf_matrix$overall["Accuracy"]
+
+rpart.plot(decision_tree)
+
+```
+
+
+
+```{r include=FALSE}
 results <- c(0, 0, 0, 0, 0)
 names(results) <- c("Decision Tree", "Support Vector Machine", 
                               "Random Forest", "Adabag", "Neural Network")
 
 ```
-
 
 ### Decision Tree
 
@@ -402,7 +460,7 @@ h2o.shutdown(prompt = F)
 ```
 
 
-### Results
+# Results
 
 The success of models that are trained with optimal parameter sets are given in the following bar plot:
 
