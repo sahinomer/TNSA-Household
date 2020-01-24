@@ -2,9 +2,9 @@
 title: "TNSA Household Wealth Index"
 author: "Ömer Şahin"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
 ---
 
 # Introduction
@@ -424,7 +424,7 @@ results["Random Forest"]
 ### Neural Network
 A neural network is designed that is suitable for the classification problem. The architecture of the neural network consists of three hidden layers. After each hidden layer dropout is applied to prevent overfitting and ReLu is used as an activation function.
 
-```{r eval=FALSE, include=FALSE}
+```{r include=FALSE}
 h2oInstance <- h2o.init(ip = "localhost") # start H2O instance locally
 ```
 
@@ -458,7 +458,7 @@ results["Neural Network"] <- conf_matrix$overall["Accuracy"]
 results["Neural Network"]
 ```
 
-```{r eval=FALSE, include=FALSE}
+```{r include=FALSE}
 h2o.shutdown(prompt = F)
 ```
 
