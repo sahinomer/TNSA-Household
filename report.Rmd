@@ -135,7 +135,7 @@ household <- household[ , -which(names(household) %in% c("refrigerator", "garbag
 Province column in the dataset is also imbalanced and has too many different classes due to there are 81 cities in Turkey. Besides, the Random Forest model cannot handle too many categories. Therefore, the province column is dropped to evaluate other models in equal conditions.
 
 ```{r}
-summary(household$province)
+head(summary(household$province))
 household <- household[, -which(names(household) == "province")]
 ```
 
@@ -145,10 +145,26 @@ TNSA Household dataset was collected under controlled by qualified observers. Th
 
 ## Analyze
 
-At the end of data preparation, some data analyzing by visualizing is done.
+At the end of data preparation, data analyzing by visualizing is done over some information about the household dataset.
 
 
-The relation between house ownership and wealth index:
+The relation between wealth index and settlement area:
+```{r echo=FALSE}
+tbl <- table(household$wealth_index, household$settlement)
+tbl <- tbl / rowSums(tbl)
+conf_matrix <- as.data.frame(tbl)
+ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
+   xlab("Wealth Index") + ylab("Settlement") + 
+   geom_tile(aes(fill = Freq)) +
+   geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
+   scale_fill_gradient(low = "white",
+                       high = "blue")
+```
+
+Most of the people live in urban areas. On the other hand, when the wealth index is reducing, people tend to live in rural areas or people that live in rural areas are poorer than the others.
+
+
+The relation between wealth index and house ownership:
 ```{r echo=FALSE}
 tbl <- table(household$wealth_index, household$house_ownership)
 tbl <- tbl / rowSums(tbl)
@@ -159,22 +175,27 @@ ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
    geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
    scale_fill_gradient(low = "white",
                        high = "blue")
-
 ```
 
-The relation between car ownership and wealth index:
+Contrary to expectation, poor households live in their own houses and richer households may prefer to live in a rented house.
+
+
+The relation between wealth index and owning another house:
 ```{r echo=FALSE}
-tbl <- table(household$wealth_index, household$car)
+tbl <- table(household$wealth_index, household$owns_another_house)
 tbl <- tbl / rowSums(tbl)
 conf_matrix <- as.data.frame(tbl)
 ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
-   xlab("Wealth Index") + ylab("Car Ownership") + 
+   xlab("Wealth Index") + ylab("Own Another House") + 
    geom_tile(aes(fill = Freq)) +
    geom_label(aes(label = sprintf("%0.4f", Freq)), vjust = 0.5) +
    scale_fill_gradient(low = "white",
                        high = "blue")
 
 ```
+
+According to the data, people do not much interest in having another house. Still, rich households much more have another house than the poor ones as expected.
+
 
 The relation between internet connection and wealth index:
 ```{r echo=FALSE}
@@ -190,31 +211,8 @@ ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
 
 ```
 
+According to 2013 data, the internet connection is still not very prevalent and seen as a luxury feature. 
 
-
-
-```{r eval=FALSE, include=FALSE}
-# Plot distribution of data
-# for(colnm in colnames(household)) {
-#   print(ggplot(household, aes_string(x = colnm)) +
-#           geom_bar() + ylab("Number of Households"))
-# }
-
-# for(colmn in colnames(household)) {
-#   tbl <- table(household$wealth_index, household[,colmn])
-#   tbl <- tbl / rowSums(tbl)
-#   conf_matrix <- as.data.frame(tbl)
-#   print(
-#     ggplot(data =  conf_matrix, mapping = aes(x = Var1, y = Var2)) +
-#       xlab("wealth_index") + ylab(colmn) + 
-#       geom_tile(aes(fill = Freq)) +
-#       geom_text(aes(label = sprintf("%0.4f", Freq)), vjust = 1) +
-#       scale_fill_gradient(low = "blue",
-#                           high = "red",
-#                           trans = "log")
-#   )
-# }
-```
 
 
 # Classification

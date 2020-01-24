@@ -75,10 +75,6 @@ household <- household[, -which(names(household) == "province")]
 #                           trans = "log")
 #   )
 # }
-# summary(household[, 16:41])
-# 
-# summary(household[, c("refrigerator", "garbage_grinder", "washing_machine", "washer_dryer", 
-#                       "home_theather", "mobile_phone", "taxi_minibus", "tractor", "motorcycle")])
 
 
 ###########################################################################
