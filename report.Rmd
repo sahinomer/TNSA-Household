@@ -249,8 +249,12 @@ test <- household[-samples, ]
 
 ### Analyze Decision Boundary
 
-```{r}
-decision_tree <- rpartXse(wealth_index ~ ., train[,c("wealth_index", "internet")], se = 1)
+By using a simple decision tree, tried to understand the decision boundary for classification household dataset according to the wealth index.
+
+```{r warning=FALSE}
+decision_tree <- rpartXse(wealth_index ~ ., 
+                          train[,c("wealth_index", "heating", "dishwasher", 
+                                   "internet", "settlement")], se = 1)
 
 predicted <- predict(decision_tree, test, type = "class")
 
@@ -262,6 +266,7 @@ rpart.plot(decision_tree)
 
 ```
 
+Asking a household member about settlement area that they are living, their heating method, whether they have dishwasher and internet connection gives an idea of the wealth index of the household by mostly misclassified only one level different. After all, a better classification model is required for more success. Even attributes that have high information gain are selected, the wealth index cannot be predicted directly by using some partition of attributes.
 
 
 ```{r include=FALSE}
