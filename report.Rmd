@@ -22,8 +22,6 @@ library(tidyr)    # Seperate data column
 library(ggplot2)  # Visualize
 ```
 
-### Preparation
-
 #### Load Household Dataset
 
 Simplified household data of the TNSA dataset is loaded.
@@ -147,6 +145,8 @@ TNSA Household dataset was collected under controlled by qualified observers. Th
 ## Analyze
 
 
+
+
 ```{r eval=FALSE, include=FALSE}
 # Plot distribution of data
 # for(colnm in colnames(household)) {
@@ -180,11 +180,11 @@ Each sample row contains 34 features about household and wealth index. The wealt
 Required libraries for data preparation and analyze:
 ```{r message=FALSE, warning=FALSE}
 library(performanceEstimation)   # Performance estimation
-
+library(caret)         # Confusion matrix
 library(CORElearn)     # Feature extraction
 library(DMwR2)         # Decision tree
 library(rpart)         # Decision tree
-library(rpart.plot)    # Decision tree Visualize
+library(rpart.plot)    # Decision tree visualize
 library(e1071)         # Support vector machine
 library(randomForest)  # Random forest
 library(adabag)        # Adabag
@@ -216,10 +216,10 @@ names(results) <- c("Decision Tree", "Support Vector Machine",
 
 ### Decision Tree
 
-The first tried model is the decision tree. Optimum parameters are selected by using a performance estimator. The model is trained with this parameter set and the test set is predicted by the model.
-Parameters are information gain threshold and prune value. Features are sorted by their information gain and thresholded by a value to reduce the number of features. Features are kept if their information gain value greater than the threshold. Decision tree pruning is evaluated by given parameters.
+The first model is the decision tree. Optimum parameters are selected by using a performance estimator. The model is trained with this parameter set and the test set is predicted by the model.
+Parameters are information gain threshold and prune value. Features are sorted by their information gain and thresholded by a value to reduce the number of features. Features are kept if their information gain value is greater than the threshold. Decision tree pruning is evaluated by given parameters.
 
-Paramter set:
+Parameter set:
 ```{r}
 inf_gain <- c(0.0, 0.1, 0.2)
 prune_se <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
@@ -236,7 +236,7 @@ work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 inf_gain <- work_flow@pars[["inf_gain"]]
 prune_se <- work_flow@pars[["prune_se"]]
 
-cat("Best Paramter set:",
+cat("Best Parameter set:",
     "\n  inf_gain : ", inf_gain,
     "\n  prune_se : ", prune_se)
 
@@ -245,11 +245,12 @@ information_gain <- attrEval(wealth_index ~ ., train, estimator = "InfGain")
 features <- names(information_gain)[information_gain>inf_gain]
 
 model <- rpartXse(wealth_index ~ ., train[,c("wealth_index", features)], se = prune_se)
+
 predicted <- predict(model, test, type = "class")
 
-conf_matrix <- table(predicted, test$wealth_index)
-conf_matrix
-results["Decision Tree"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+conf_matrix <- confusionMatrix(predicted, test$wealth_index)
+conf_matrix$table
+results["Decision Tree"] <- conf_matrix$overall["Accuracy"]
 results["Decision Tree"]
 
 ```
@@ -257,9 +258,9 @@ results["Decision Tree"]
 
 
 ### Support Vector Machine
-SVM---
+SVM crates decision boundry between classes. Cost and gamma parameters are evaluated by performance estimation. The test model is trained with the optimum paramater set for the classification.
 
-Paramter set:
+Parameter set:
 ```{r}
 cost <- c(1, 5, 10)
 gamma <- c(0.01, 0.001)
@@ -275,29 +276,62 @@ work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 cost <- work_flow@pars[["learner.pars"]][["cost"]]
 gamma <- work_flow@pars[["learner.pars"]][["gamma"]]
 
-cat("Best Paramter set:",
+cat("Best Parameter set:",
     "\n  cost  : ", cost,
     "\n  gamma : ", gamma)
 
 # Train model with best parameter set for testing
 model <- svm(wealth_index ~ ., train, cost = cost, gamma = gamma)
+
 predicted <- predict(model, test, type = "class")
 
-conf_matrix <- table(predicted, test$wealth_index)
-conf_matrix
-results["Support Vector Machine"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+conf_matrix <- confusionMatrix(predicted, test$wealth_index)
+conf_matrix$table
+results["Support Vector Machine"] <- conf_matrix$overall["Accuracy"]
 results["Support Vector Machine"]
 ```
 
 
+### Adabag
+Bootstrap Aggregation (Bagging) is an ensemble method. The number of iterations for boosting run and maxdepth is evaluated by using performance estimator.
+
+Parameter set:
+```{r}
+mfinal = c(20, 80, 120, 200)
+maxdepth = c(5, 10, 20)
+```
+
+```{r cache=TRUE}
+load("adabag.perf")  # Load pre-estimated performances
+plot(perfEst) 
+
+# Best parameter set
+work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
+
+mfinal <- work_flow@pars[["mfinal"]]
+maxdepth <- work_flow@pars[["maxdepth"]]
+
+cat("Best Parameter set:",
+    "\n  mfinal   : ", mfinal,
+    "\n  maxdepth : ", maxdepth)
+
+# Train model with best parameter set for testing
+model <- bagging(wealth_index ~ ., train, mfinal = mfinal, control = rpart.control(maxdepth=maxdepth))
+
+predicted <- predict(model, test, type = "class")
+
+conf_matrix <- confusionMatrix(as.factor(predicted$class), test$wealth_index)
+conf_matrix$table
+results["Adabag"] <- conf_matrix$overall["Accuracy"]
+results["Adabag"]
+```
 
 ### Random Forest
--- random forest
+Random Forest is combination of the multiple decision trees to prevent overfitting that comes with decision trees. The number of trees is evaluated by using performance estimator.
 
-Paramter set:
+Parameter set:
 ```{r}
-cost <- c(1, 5, 10)
-gamma <- c(0.01, 0.001)
+ntree = c(100, 200, 300, 400, 500)
 ```
 
 ```{r cache=TRUE}
@@ -309,7 +343,7 @@ work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
 
 ntree <- work_flow@pars[["learner.pars"]][["ntree"]]
 
-cat("Best Paramter set:",
+cat("Best Parameter set:",
     "\n  ntree  : ", ntree)
 
 # Train model with best parameter set for testing
@@ -317,50 +351,16 @@ model <- randomForest(wealth_index ~ ., train, ntree = ntree)
 
 predicted <- predict(model, test, type = "class")
 
-conf_matrix <- table(predicted, test$wealth_index)
-conf_matrix
-results["Random Forest"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+conf_matrix <- confusionMatrix(predicted, test$wealth_index)
+conf_matrix$table
+results["Random Forest"] <- conf_matrix$overall["Accuracy"]
 results["Random Forest"]
 ```
 
 
 
-### Adabag
---- adabagg
-
-Paramter set:
-```{r}
-cost <- c(1, 5, 10)
-gamma <- c(0.01, 0.001)
-```
-
-```{r cache=TRUE}
-load("adabag.perf")  # Load pre-estimated performances
-plot(perfEst) 
-
-# Best parameter set
-work_flow <- getWorkflow(topPerformers(perfEst, maxs = TRUE)[[1]][1,1], perfEst)
-
-mfinal <- work_flow@pars[["mfinal"]]
-control <- work_flow@pars[["control"]]
-
-cat("Best Paramter set:",
-    "\n  mfinal  : ", mfinal,
-    "\n  control : ", control$maxdepth)
-
-# Train model with best parameter set for testing
-model <- bagging(wealth_index ~ ., train, mfinal = mfinal, control = control)
-
-predicted <- predict(model, test, type = "class")
-
-predicted$confusion
-results["Adabag"] <- sum(diag(predicted$confusion)) / sum(predicted$confusion)
-results["Adabag"]
-```
-
-
 ### Neural Network
---- nn
+A neural network is designed that is suitable for the classification problem. The architecture of the neural network consists of three hidden layers. After each hidden layer dropout is applied to prevent overfitting and ReLu is used as an activation function.
 
 ```{r eval=FALSE, include=FALSE}
 h2oInstance <- h2o.init(ip = "localhost") # start H2O instance locally
@@ -390,9 +390,9 @@ predicted$predict <- factor(predicted$predict,
 
 predicted$target <- test$wealth_index
 
-conf_matrix <- table(predicted$predict, predicted$target)
-conf_matrix
-results["Neural Network"] <- sum(diag(conf_matrix)) / sum(conf_matrix)
+conf_matrix <- confusionMatrix(predicted$predict, predicted$target)
+conf_matrix$table
+results["Neural Network"] <- conf_matrix$overall["Accuracy"]
 results["Neural Network"]
 ```
 
@@ -402,6 +402,8 @@ h2o.shutdown(prompt = F)
 
 
 ### Results
+
+The success of models that are trained with optimal parameter sets are given in the following bar plot:
 
 ```{r}
 df = data.frame(Model = names(results), 
@@ -414,6 +416,16 @@ ggplot(df, aes(x = Model, weight=Accuracy)) + geom_bar() +
 ```
 
 
+According to results, Adabag achieved the worst score, decision tree, and random forest got more success than bagging. SVM and neural network models achieved a similar score on classification TNSA household data for the wealth index. The neural network model is the best model in evaluated ones. In addition, misclassification is done mostly in favor of the close class such as richer to richest.
+
+The normalized confusion matrix of the neural network that is the best model is given at the following plot:
+
+```{r}
+library(caret)
+cm <- confusionMatrix(predicted$predict, predicted$target)
+cm$Accuracy
+
+```
 
 
 
