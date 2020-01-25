@@ -2,9 +2,9 @@
 title: "TNSA Household Wealth Index"
 author: "Ömer Şahin"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 # Introduction
@@ -474,7 +474,7 @@ The success of models that are trained with optimal parameter sets are given in 
 ```{r}
 df = data.frame(Model = names(results), 
                 Accuracy = results*100)
-ggplot(df, aes(x = Model, weight=Accuracy)) + geom_bar() + 
+ggplot(df, aes(x = Model, weight=Accuracy)) + geom_bar(fill="steelblue") + 
         xlab("Model") + ylab("Accuracy") + 
         ggtitle(label = "Model Accuracies") + 
         geom_text(aes(label = sprintf("%0.4f", round(Accuracy, digits = 4)), 
@@ -501,7 +501,14 @@ ggplot(data =  normalized_conf_matrix, mapping = aes(x = Reference, y = Predicti
 
 According to the confusion matrix, the neural network model is more successful in predicting the extreme classes than the predicting to wealth indexes in the middle.
 
+# References
 
+   - TNSA Dataset http://www.hips.hacettepe.edu.tr/eng/population_survey.shtml
+   - Lecture Notes
+   - GGPlot https://ggplot2.tidyverse.org/
+   - R Documentations https://www.rdocumentation.org/
+   - H2O Neural Network http://docs.h2o.ai/h2o/latest-stable/h2o-docs/data-science/deep-learning.html
+   
 
 
 
