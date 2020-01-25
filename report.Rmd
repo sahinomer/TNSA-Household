@@ -109,7 +109,7 @@ household <- household[ , -which(names(household) %in% c("woman_member",  # woma
 The wealth index of a household is the target that is tried to predict. The distribution of the wealth index is quite balanced. It helps to ensure the model does not tend to a class when the target class is balanced. 
 
 ```{r}
-ggplot(household, aes(x = wealth_index)) + geom_bar() + 
+ggplot(household, aes(x = wealth_index)) + geom_bar(fill="steelblue") + 
         xlab("Wealth Index") + ylab("Number of Households") + 
         ggtitle(label = "Wealth Index Distribution")
       
@@ -251,7 +251,7 @@ train <- household[samples, ]
 test <- household[-samples, ]
 ```
 
-### Analyze Decision Boundary
+### Analyze Decision
 
 By using a simple decision tree, tried to understand the decision boundary for classification household dataset according to the wealth index.
 
