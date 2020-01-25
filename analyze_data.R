@@ -31,10 +31,10 @@ household$wealth_index <- factor(household$wealth_index,
 ###########################################################################
 
 # Rate of related attributes
-household$man_member_rate = (household$household_member - household$woman_member) / household$household_member
-household$woman_member_rate = household$woman_member / household$household_member
-household$child_member_rate = household$children_under_5 / household$household_member
-household$bedroom_rate = household$bedroom_number / household$rooms_number
+household$man_member_rate <- (household$household_member - household$woman_member) / household$household_member
+household$woman_member_rate <- household$woman_member / household$household_member
+household$child_member_rate <- household$children_under_5 / household$household_member
+household$bedroom_rate <- household$bedroom_number / household$rooms_number
 
 # Drop duplicated columns with rate values
 household <- household[ , -which(names(household) %in% c("woman_member",  # woman_member_rate
